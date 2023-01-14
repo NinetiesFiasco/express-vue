@@ -1,11 +1,12 @@
 <template>
-  <div>
-    Hello world!
-  </div>
+  <div>Cats</div>
 </template>
 
 <script>
 export default {
-  name: 'HelloWorld',
+  name: 'CatsPage'
 }
 </script>
+
+<style scoped>
+</style>
