@@ -4,4 +4,13 @@ const jsonHeaders = {
   'Content-Type': 'application/json'
 }
 
-export {baseUrl, jsonHeaders}
+const handleResponse = async function(response) {
+  if (response.status >= 200 && response.status <= 299) {
+    return await response.json()
+  } else {
+    console.log(response.status, response.statusText)
+    return false
+  }
+}
+
+export {baseUrl, jsonHeaders, handleResponse}

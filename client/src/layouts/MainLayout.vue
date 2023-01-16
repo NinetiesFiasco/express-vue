@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import AppMenu from '../components/AppMenu.vue'
+import {AppMenu} from '../components'
 
 
 export default {

@@ -1,4 +1,5 @@
 import api from '../api'
+import {set, fill} from './utils'
 
 const newCat = () => ({
   name: '',
@@ -16,15 +17,6 @@ export default {
     pageItemsAmount: 5
   }),
   mutations: {
-    reset(state) {
-      state.editableCat = newCat()
-    },
-    setName(state, value) {
-      state.editableCat.name = value
-    },
-    setAge(state, value) {
-      state.editableCat.age = value
-    },
     create(state, value) {
       state.cats.push(value)
     },
@@ -41,43 +33,15 @@ export default {
     _delete(state, value) {
       state.cats = state.cats.filter(cat => cat._id !== value )
     },
-    setCats(state, value) {
-      state.cats = value
-    },
-    setCount(state, value) {
-      state.count = value
-    },
-    setPage(state, value) {
-      state.page = value
-    },
-    setPageItemsAmount(state, value) {
-      state.pageItemsAmount = value
-    }
+    setCats: set('cats'),
+    setCount: set('count'),
+    setPage: set('page'),
+    setPageItemsAmount: set('pageItemsAmount'),
+    fillEditableCat: fill('editableCat')
   },
   actions: {
-    reset({commit}) {
-      commit('reset')
-    },
-    save({state, dispatch}) {
-      if (!state.editableCat.name || !state.editableCat.age)
-        return
-
-      state.editableCat._id
-        ? dispatch('update')
-        : dispatch('create')
-    },
-    async create({state, commit}) {
-      const cat = await api.cats.create(state.editableCat)
-      commit('reset')
-      commit('create', cat)
-    },
-    async update({state, commit}) {
-      const cat = await api.cats.update(state.editableCat._id, state.editableCat)
-      commit('reset')
-      commit('update', cat)
-    },
-    startUpdate({commit}, id) {
-      commit('startUpdate', id)
+    startUpdate({dispatch, state}, id) {
+      dispatch('setEditable', {...state.cats.find(cat => cat._id === id)})
     },
     async _delete({commit}, id) {
       await api.cats._delete(id)
@@ -85,9 +49,10 @@ export default {
     },
     async readPage({commit, state}) {
       let cats = await api.cats.readPage(state.page - 1, state.pageItemsAmount)
+      commit('setCats', cats)
+      
       let count = await api.cats.count()
       commit('setCount', count)
-      commit('setCats', cats)
     },
     setPage({commit, dispatch}, page) {
       commit('setPage', page)
@@ -95,13 +60,29 @@ export default {
     },
     setPageItemsAmount({commit}, amount) {
       commit('setPageItemsAmount', amount)
+    },
+    createNew({dispatch}) {
+      dispatch('setEditable', newCat())
+    },
+    setEditable({commit}, cat) {
+      commit('nameAgeEditor/setEditableAnimal', {...cat}, {root: true})
+      commit('nameAgeEditor/setAnimalType', 'cats', {root: true})
     }
   },
   getters: {
-    cats: (state) => state.cats,
-    editableCat: (state) => state.editableCat,
-    count: (state) => state.count,
-    page: (state) => state.page,
-    pageItemsAmount: (state) => state.pageItemsAmount
-  }
+    catsTable(state) {
+      return {
+        caption: 'Cats',
+        titles: ['ID', 'Name', 'Age', 'Created'],
+        data: state.cats.map(cat => ({
+          _id: cat._id,
+          name: cat.name,
+          age: cat.age,
+          createdAt: cat.createdAt
+        }))
+      } 
+    },
+    offset: (state) => (state.page - 1) * state.pageItemsAmount,
+    pageAmount: state => Math.ceil(state.count / state.pageItemsAmount)
+  },
 }
